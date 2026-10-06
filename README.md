@@ -58,6 +58,11 @@ The message flow and rationale are documented in the
 [C4 container view](docs/c4-container.md) and
 [ADR 001](docs/adr/001-rabbitmq-order-inventory.md).
 
+Proposed order listing, draft editing, cancellation, and soft deletion are
+specified in the [order management spec](docs/specs/order-management.md), with
+an [implementation backlog](docs/tickets/order-management.md). These features
+are planned and are not implemented yet.
+
 The service ports remain published for local debugging:
 
 ```text
