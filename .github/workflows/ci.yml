@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        path:
+          - gateway
+          - services/catalog
+          - services/inventory
+          - services/order
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.path }}
+        run: uv sync --locked --dev
+
+      - name: Ruff check
+        working-directory: ${{ matrix.path }}
+        run: uv run ruff check .
+
+      - name: Ruff format
+        working-directory: ${{ matrix.path }}
+        run: uv run ruff format --check .
+
+      - name: Run tests
+        working-directory: ${{ matrix.path }}
+        run: uv run pytest
+
+  end-to-end:
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start complete stack
+        run: docker compose up --build --detach --wait
+
+      - name: Verify asynchronous order flow
+        run: python scripts/e2e.py
+
+      - name: Show service logs
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Stop complete stack
+        if: always()
+        run: docker compose down --volumes

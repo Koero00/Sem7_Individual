@@ -1,0 +1,261 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: webshop
+      RABBITMQ_DEFAULT_PASS: webshop
+      RABBITMQ_DEFAULT_VHOST: /webshop
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  catalog-database:
+    image: postgres:17-alpine
+    container_name: catalog-database
+    environment:
+      POSTGRES_USER: catalog
+      POSTGRES_PASSWORD: catalog
+      POSTGRES_DB: catalog
+    ports:
+      - "5432:5432"
+    volumes:
+      - catalog-data:/var/lib/postgresql/data
+      - ./services/catalog/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalog -d catalog"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  catalog-service:
+    build:
+      context: ./services/catalog
+    container_name: catalog-service
+    environment:
+      DATABASE_URL: postgresql://catalog:catalog@catalog-database:5432/catalog
+    ports:
+      - "8001:8001"
+    depends_on:
+      catalog-database:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8001/products')"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  inventory-database:
+    image: postgres:17-alpine
+    container_name: inventory-database
+    environment:
+      POSTGRES_USER: inventory
+      POSTGRES_PASSWORD: inventory
+      POSTGRES_DB: inventory
+    ports:
+      - "5433:5432"
+    volumes:
+      - inventory-data:/var/lib/postgresql/data
+      - ./services/inventory/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventory -d inventory"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  inventory-service:
+    build:
+      context: ./services/inventory
+    container_name: inventory-service
+    environment:
+      DATABASE_URL: postgresql://inventory:inventory@inventory-database:5432/inventory
+    ports:
+      - "8003:8003"
+    depends_on:
+      inventory-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8003/health')"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  inventory-migrate:
+    build:
+      context: ./services/inventory
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql://inventory:inventory@inventory-database:5432/inventory
+    depends_on:
+      inventory-database:
+        condition: service_healthy
+    restart: "no"
+
+  inventory-reservation-consumer:
+    build:
+      context: ./services/inventory
+    command: ["python", "reservation_consumer.py"]
+    environment:
+      DATABASE_URL: postgresql://inventory:inventory@inventory-database:5432/inventory
+      RABBITMQ_URL: amqp://webshop:webshop@rabbitmq:5672/%2Fwebshop
+      MESSAGE_RETRY_LIMIT: "3"
+      MESSAGE_RETRY_DELAY_MS: "5000"
+    depends_on:
+      inventory-migrate:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  inventory-outbox-publisher:
+    build:
+      context: ./services/inventory
+    command: ["python", "outbox_publisher.py"]
+    environment:
+      DATABASE_URL: postgresql://inventory:inventory@inventory-database:5432/inventory
+      RABBITMQ_URL: amqp://webshop:webshop@rabbitmq:5672/%2Fwebshop
+      OUTBOX_BATCH_SIZE: "100"
+      OUTBOX_POLL_INTERVAL_SECONDS: "1"
+    depends_on:
+      inventory-migrate:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  order-database:
+    image: postgres:17-alpine
+    container_name: order-database
+    environment:
+      POSTGRES_USER: orders
+      POSTGRES_PASSWORD: orders
+      POSTGRES_DB: orders
+    ports:
+      - "5434:5432"
+    volumes:
+      - order-data:/var/lib/postgresql/data
+      - ./services/order/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orders -d orders"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  order-service:
+    build:
+      context: ./services/order
+    container_name: order-service
+    environment:
+      DATABASE_URL: postgresql://orders:orders@order-database:5432/orders
+    ports:
+      - "8004:8004"
+    depends_on:
+      order-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8004/health')"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  order-migrate:
+    build:
+      context: ./services/order
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql://orders:orders@order-database:5432/orders
+    depends_on:
+      order-database:
+        condition: service_healthy
+    restart: "no"
+
+  order-outbox-publisher:
+    build:
+      context: ./services/order
+    command: ["python", "outbox_publisher.py"]
+    environment:
+      DATABASE_URL: postgresql://orders:orders@order-database:5432/orders
+      RABBITMQ_URL: amqp://webshop:webshop@rabbitmq:5672/%2Fwebshop
+      OUTBOX_BATCH_SIZE: "100"
+      OUTBOX_POLL_INTERVAL_SECONDS: "1"
+    depends_on:
+      order-migrate:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  order-result-consumer:
+    build:
+      context: ./services/order
+    command: ["python", "result_consumer.py"]
+    environment:
+      DATABASE_URL: postgresql://orders:orders@order-database:5432/orders
+      RABBITMQ_URL: amqp://webshop:webshop@rabbitmq:5672/%2Fwebshop
+      MESSAGE_RETRY_LIMIT: "3"
+      MESSAGE_RETRY_DELAY_MS: "5000"
+    depends_on:
+      order-migrate:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: ./gateway
+    container_name: api-gateway
+    environment:
+      CATALOG_SERVICE_URL: http://catalog-service:8001
+      INVENTORY_SERVICE_URL: http://inventory-service:8003
+      ORDER_SERVICE_URL: http://order-service:8004
+    ports:
+      - "8000:8000"
+    depends_on:
+      catalog-service:
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  catalog-data:
+  inventory-data:
+  order-data:
+  rabbitmq-data:
