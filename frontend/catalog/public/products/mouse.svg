@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" fill="none" aria-hidden="true"><defs>
+    <linearGradient id="mouse-catalog-metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a5abb4"/><stop offset=".45" stop-color="#616b79"/><stop offset="1" stop-color="#303846"/></linearGradient>
+    <linearGradient id="mouse-catalog-screen" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#182e43"/><stop offset=".5" stop-color="#5a8193"/><stop offset="1" stop-color="#b5caba"/></linearGradient>
+    <linearGradient id="mouse-catalog-body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#68717e"/><stop offset=".55" stop-color="#3a4451"/><stop offset="1" stop-color="#222a36"/></linearGradient>
+  </defs><ellipse cx="150" cy="259" rx="65" ry="10" fill="#162435" opacity=".1"/>
+    <g transform="rotate(-15 150 150)"><path d="M150 45c-43 0-70 35-70 91v45c0 48 28 76 70 76s70-28 70-76v-45c0-56-27-91-70-91Z" fill="url(#mouse-catalog-body)"/>
+    <path d="M150 45v98m-68 7c43 13 93 13 136 0" stroke="#192433" stroke-width="2"/><path d="M93 132c1-41 13-65 37-75" stroke="#a2acb6" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>
+    <rect x="143" y="82" width="14" height="37" rx="7" fill="#222c38" stroke="#7f8c99" stroke-width="2"/><path d="M146 91h8m-8 6h8m-8 6h8m-8 6h8" stroke="#5e6e7c" stroke-width="1.5"/><path d="M140 235h20" stroke="#9eacbd" stroke-width="2" stroke-linecap="round" opacity=".45"/></g></svg>

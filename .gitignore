@@ -3,3 +3,10 @@
 .ruff_cache/
 __pycache__/
 *.pyc
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.env*
+!.env.example

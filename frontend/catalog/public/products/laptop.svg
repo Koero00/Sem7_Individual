@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" fill="none" aria-hidden="true"><defs>
+    <linearGradient id="laptop-catalog-metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a5abb4"/><stop offset=".45" stop-color="#616b79"/><stop offset="1" stop-color="#303846"/></linearGradient>
+    <linearGradient id="laptop-catalog-screen" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#182e43"/><stop offset=".5" stop-color="#5a8193"/><stop offset="1" stop-color="#b5caba"/></linearGradient>
+    <linearGradient id="laptop-catalog-body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#68717e"/><stop offset=".55" stop-color="#3a4451"/><stop offset="1" stop-color="#222a36"/></linearGradient>
+  </defs><ellipse cx="150" cy="249" rx="110" ry="9" fill="#162435" opacity=".1"/>
+    <rect x="39" y="62" width="222" height="151" rx="9" fill="url(#laptop-catalog-metal)"/><rect x="44" y="67" width="212" height="140" rx="5" fill="#18212d"/><rect x="50" y="74" width="200" height="126" rx="2" fill="url(#laptop-catalog-screen)"/>
+    <path d="M50 160c64-91 117 26 200-68v108H50Z" fill="#adcbba" opacity=".6"/><path d="M50 187c70-69 135 20 200-46v59H50Z" fill="#d5e2bf" opacity=".65"/><circle cx="150" cy="70" r="1.5" fill="#728390"/>
+    <path d="m39 213-23 25c0 7 9 11 18 11h232c9 0 18-4 18-11l-23-25Z" fill="url(#laptop-catalog-metal)"/><path d="m46 216-12 16h232l-12-16Z" fill="#8f99a4"/><path d="M121 216h58l5 13h-68Z" fill="#aeb6bf"/><path d="M16 238h268" stroke="#c8cfd6" stroke-width="2"/></svg>
