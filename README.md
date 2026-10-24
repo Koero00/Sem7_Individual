@@ -14,6 +14,21 @@ The gateway reaches the services over Compose's private network by service
 name. PostgreSQL data is stored in the `catalog-data`, `inventory-data`, and `order-data`
 volumes.
 
+## Catalog frontend prototypes
+
+Three local ordering designs are available in `frontend/catalog-prototype`:
+an illustrated storefront, a quick-order list, and a guided basket builder.
+From this checkout, run:
+
+```powershell
+node frontend/catalog-prototype/server.mjs
+```
+
+Open `http://localhost:5173/prototype/catalog?variant=A` and use the bottom
+switcher to compare the three designs. They share an in-memory basket and
+simulate checkout without sending real orders. See the
+[prototype notes](frontend/catalog-prototype/README.md) for details.
+
 ## Start the complete stack
 
 From this directory, run:
