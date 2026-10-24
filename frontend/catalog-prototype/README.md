@@ -4,6 +4,16 @@ Question: should ordering start with visual browsing, a quick quantity list, or 
 
 **Preferred direction: B, the quick-order list, themed as an electronics store.**
 
+Option B has three color studies with the same layout and functionality:
+
+| Palette | Preview |
+| --- | --- |
+| Cobalt | <http://localhost:5173/prototype/catalog?variant=B&palette=blue> |
+| Warm amber | <http://localhost:5173/prototype/catalog?variant=B&palette=amber> |
+| Midnight violet | <http://localhost:5173/prototype/catalog?variant=B&palette=midnight> |
+
+In B, use the bottom swatches or arrow keys to compare colors. Basket contents, filters, quantities, and scroll position stay intact. The palette is stored in the URL and survives reloads. Checkout and the basket drawer follow the selected palette too. Cobalt is the default; palette selection is still open. The older layout examples remain accessible through their direct variant URLs below.
+
 Three structurally different layouts share the same in-memory basket. No real orders or payments are sent. The prototype now uses fictional electronics demo products rather than the backend's fruit seed data:
 
 | Product | Example specification | Demo unit price | Demo stock |
@@ -30,7 +40,7 @@ No dependencies need installing. Open <http://localhost:5173/prototype/catalog?v
 | `?variant=B` | The quick order | Compact product list with quantities and a persistent basket summary |
 | `?variant=C` | The guided basket | Large product spotlight, then pick → review → order |
 
-Use the bottom switcher or left/right arrow keys to compare. Arrow keys leave form inputs alone. The selected variant stays in the URL across reloads. Search, filters, sorting, quantity limits, the basket, and checkout work locally. Checkout accepts a customer ID, simulates `pending` → `confirmed`, and clears the basket after submitting. Refreshing resets session data. Stock is a static snapshot, not depleted by demo orders.
+The bottom switcher compares colors in B and layouts in A/C. Arrow keys leave form inputs alone. The selected variant stays in the URL across reloads. Search, filters, sorting, quantity limits, the basket, and checkout work locally. Checkout accepts a customer ID, simulates `pending` → `confirmed`, and clears the basket after submitting. Refreshing resets session data. Stock is a static snapshot, not depleted by demo orders.
 
 The `{ }` button exposes the current state and prospective order payload. The switcher and keyboard shortcuts are hidden when the server runs with `NODE_ENV=production`. This remains prototype code and is not intended for deployment.
 

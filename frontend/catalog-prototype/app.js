@@ -7,9 +7,13 @@ const products = [
   { id: '3', name: 'Arc Wireless Mouse', type: 'Mouse', category: 'mice', specs: 'Bluetooth · Graphite', description: 'A compact wireless Bluetooth mouse in Graphite.', copy: 'A smoother way to get things done.', price: 4900, stock: 25, kind: 'mouse', note: 'A better everyday setup' },
 ];
 const variants = { A: 'The storefront', B: 'The quick order', C: 'The guided basket' };
+// Same B layout, three color studies. Palette changes preserve all ordering state.
+const palettes = { blue: 'Cobalt', amber: 'Warm amber', midnight: 'Midnight violet' };
 const initialVariant = new URL(location.href).searchParams.get('variant');
+const initialPalette = new URL(location.href).searchParams.get('palette');
 const state = {
   variant: Object.hasOwn(variants, initialVariant) ? initialVariant : 'B',
+  palette: Object.hasOwn(palettes, initialPalette) ? initialPalette : 'blue',
   cart: {}, search: '', filter: 'all', sort: 'featured', selected: '1',
   customer: 'customer-1', order: null, dialog: null, review: false, details: false,
 };
@@ -146,14 +150,18 @@ function VariantC() {
   </div>`;
 }
 
+function PaletteControls() {
+  return `<div class="prototype-bar palette-bar" aria-label="Color palette switcher"><span class="prototype-tag">COLOR STUDY</span><button data-action="previous-palette" aria-label="Previous color palette">${icon('left', 17)}</button><span class="variant-name">${palettes[state.palette]}</span><button data-action="next-palette" aria-label="Next color palette">${icon('right', 17)}</button><div class="variant-dots palette-swatches">${Object.entries(palettes).map(([key, label], i) => `<button class="palette-swatch swatch-${key} ${key === state.palette ? 'active' : ''}" data-action="palette" data-id="${key}" aria-label="Palette ${i + 1}: ${label}" aria-pressed="${key === state.palette}" title="${label}">${i + 1}</button>`).join('')}</div><button class="details-toggle" data-action="details" aria-label="Prototype state" aria-expanded="${state.details}">{ }</button></div>`;
+}
 function PrototypeSwitcher() {
   const payload = { customer_id: state.customer, items: cartProducts().map(p => ({ product_id: p.id, quantity: quantity(p.id) })) };
-  return `${state.details ? `<aside class="prototype-details"><div><strong>Prototype state</strong><button data-action="details" aria-label="Close prototype state">${icon('close', 16)}</button></div><p>In-memory demo · prices in cents · no API requests</p><pre>${escape(JSON.stringify({ variant: state.variant, layout: variants[state.variant], search: state.search, filter: state.filter, sort: state.sort, selected_product: state.selected, review: state.review, basket: state.cart, total_cents: total(), order: state.order, next_api_request: { method: 'POST', path: '/orders', body: payload } }, null, 2))}</pre></aside>` : ''}
-    <div class="prototype-bar" aria-label="Prototype design switcher"><span class="prototype-tag">PROTOTYPE</span><button data-action="previous-variant" aria-label="Previous design">${icon('left', 17)}</button><span class="variant-name">${state.variant}<span> / </span>${variants[state.variant]}</span><button data-action="next-variant" aria-label="Next design">${icon('right', 17)}</button><div class="variant-dots">${Object.keys(variants).map(v => `<button class="${v === state.variant ? 'active' : ''}" data-action="variant" data-id="${v}" aria-label="Design ${v}: ${variants[v]}" aria-pressed="${state.variant === v}">${v}</button>`).join('')}</div><button class="details-toggle" data-action="details" aria-expanded="${state.details}">{ }</button></div>`;
+  return `${state.details ? `<aside class="prototype-details"><div><strong>Prototype state</strong><button data-action="details" aria-label="Close prototype state">${icon('close', 16)}</button></div><p>In-memory demo · prices in cents · no API requests</p><pre>${escape(JSON.stringify({ variant: state.variant, palette: state.palette, layout: variants[state.variant], search: state.search, filter: state.filter, sort: state.sort, selected_product: state.selected, review: state.review, basket: state.cart, total_cents: total(), order: state.order, next_api_request: { method: 'POST', path: '/orders', body: payload } }, null, 2))}</pre></aside>` : ''}
+    ${state.variant === 'B' ? PaletteControls() : `<div class="prototype-bar" aria-label="Prototype design switcher"><span class="prototype-tag">PROTOTYPE</span><button data-action="previous-variant" aria-label="Previous design">${icon('left', 17)}</button><span class="variant-name">${state.variant}<span> / </span>${variants[state.variant]}</span><button data-action="next-variant" aria-label="Next design">${icon('right', 17)}</button><div class="variant-dots">${Object.keys(variants).map(v => `<button class="${v === state.variant ? 'active' : ''}" data-action="variant" data-id="${v}" aria-label="Design ${v}: ${variants[v]}" aria-pressed="${state.variant === v}">${v}</button>`).join('')}</div><button class="details-toggle" data-action="details" aria-expanded="${state.details}">{ }</button></div>`}`;
 }
 
 function render() {
   document.body.dataset.variant = state.variant;
+  document.body.dataset.palette = state.palette;
   document.getElementById('app').innerHTML = ({ A: VariantA, B: VariantB, C: VariantC })[state.variant]();
   document.getElementById('prototype-tools').innerHTML = PrototypeSwitcher();
   renderOverlay();
@@ -203,6 +211,21 @@ function cycleVariant(direction) {
   const keys = Object.keys(variants);
   setVariant(keys[(keys.indexOf(state.variant) + direction + keys.length) % keys.length]);
 }
+function setPalette(palette) {
+  if (!Object.hasOwn(palettes, palette)) return;
+  state.palette = palette;
+  const url = new URL(location.href);
+  url.searchParams.set('palette', palette);
+  history.replaceState(null, '', url);
+  document.body.dataset.palette = palette;
+  document.getElementById('prototype-tools').innerHTML = PrototypeSwitcher();
+  document.querySelector(`[data-action="palette"][data-id="${palette}"]`)?.focus({ preventScroll: true });
+  announce(`${palettes[palette]} color palette. Basket contains ${count()} units, total ${money(total())}.`);
+}
+function cyclePalette(direction) {
+  const keys = Object.keys(palettes);
+  setPalette(keys[(keys.indexOf(state.palette) + direction + keys.length) % keys.length]);
+}
 
 document.addEventListener('click', event => {
   const target = event.target.closest('[data-action]');
@@ -219,7 +242,10 @@ document.addEventListener('click', event => {
     const focusTarget = root.querySelector(`[data-action="${action}"][data-id="${id}"]:not(:disabled)`) || root.querySelector(`[data-action="${action === 'add' ? 'subtract' : 'add'}"][data-id="${id}"]:not(:disabled)`);
     (focusTarget || document.querySelector('.modal'))?.focus({ preventScroll: true });
     announce(`${p.name}: ${next}. Basket total ${money(total())}.`);
-  } else if (action === 'variant') setVariant(id);
+  } else if (action === 'palette') setPalette(id);
+  else if (action === 'previous-palette') cyclePalette(-1);
+  else if (action === 'next-palette') cyclePalette(1);
+  else if (action === 'variant') setVariant(id);
   else if (action === 'previous-variant') cycleVariant(-1);
   else if (action === 'next-variant') cycleVariant(1);
   else if (action === 'basket') openDialog('basket');
@@ -288,11 +314,13 @@ document.addEventListener('keydown', event => {
     return;
   }
   if (document.body.dataset.prototype !== 'true' || event.target.closest('input, textarea, select, [contenteditable]') || event.altKey || event.ctrlKey || event.metaKey) return;
-  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); cycleVariant(event.key === 'ArrowRight' ? 1 : -1); }
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); (state.variant === 'B' ? cyclePalette : cycleVariant)(event.key === 'ArrowRight' ? 1 : -1); }
 });
 window.addEventListener('popstate', () => {
   const variant = new URL(location.href).searchParams.get('variant');
   state.variant = Object.hasOwn(variants, variant) ? variant : 'B';
+  const palette = new URL(location.href).searchParams.get('palette');
+  state.palette = Object.hasOwn(palettes, palette) ? palette : 'blue';
   render();
 });
 render();
