@@ -18,13 +18,15 @@ volumes.
 
 Three local ordering designs are available in `frontend/catalog-prototype`:
 an illustrated storefront, a quick-order list, and a guided basket builder.
+Option B is the preferred direction, now themed as an electronics store
+with fictional phone, laptop, and mouse products.
 From this checkout, run:
 
 ```powershell
 node frontend/catalog-prototype/server.mjs
 ```
 
-Open `http://localhost:5173/prototype/catalog?variant=A` and use the bottom
+Open `http://localhost:5173/prototype/catalog?variant=B` and use the bottom
 switcher to compare the three designs. They share an in-memory basket and
 simulate checkout without sending real orders. See the
 [prototype notes](frontend/catalog-prototype/README.md) for details.

@@ -2,7 +2,17 @@
 
 Question: should ordering start with visual browsing, a quick quantity list, or a guided basket?
 
-Three structurally different layouts share the same in-memory basket. No real orders or payments are sent. The service seed products are preserved: Appel (€1), Banaan (€2), Peer (€3), with 25, 30, and 20 pieces available respectively. Currency is an EUR display assumption for this prototype; the backend stores integer cents without a currency field.
+**Preferred direction: B, the quick-order list, themed as an electronics store.**
+
+Three structurally different layouts share the same in-memory basket. No real orders or payments are sent. The prototype now uses fictional electronics demo products rather than the backend's fruit seed data:
+
+| Product | Example specification | Demo unit price | Demo stock |
+| --- | --- | --- | --- |
+| Nova Phone | 128 GB, Midnight | €699 | 12 |
+| Atlas Laptop 14 | 16 GB RAM, 512 GB SSD | €1,099 | 8 |
+| Arc Wireless Mouse | Bluetooth, Graphite | €49 | 25 |
+
+Names, specifications, prices, and stock are illustrative. Backend seed data has not been migrated. Phones, Laptops, and Mice are local demo categories; the Catalog API currently has no category or specification fields. Currency is an EUR display assumption for this prototype; the backend stores integer cents without a currency field.
 
 ## Run
 
@@ -12,7 +22,7 @@ With Node.js 20 or newer, from this directory:
 npm run prototype
 ```
 
-No dependencies need installing. Open <http://localhost:5173/prototype/catalog?variant=A>.
+No dependencies need installing. Open <http://localhost:5173/prototype/catalog?variant=B>.
 
 | Variant | Design | Ordering approach |
 | --- | --- | --- |
@@ -45,4 +55,4 @@ Rebuild the chosen layout as the real frontend and use the existing gateway at `
 
 The real frontend will need a same-origin API proxy or gateway CORS configuration, async order status handling, failed reservation feedback, and unavailable/loading states. None of those backend changes are part of this design comparison.
 
-Created on branch `codex/FE_Catalog`, based on `dev`. Design decision: **pending user comparison**. Keep the three examples on this branch; promote only the selected design after review.
+Created on branch `codex/FE_Catalog`, based on `dev`. Design decision: **B selected as the direction; refine it as an electronics store before production implementation.** The other two examples use the same electronics demo data for consistent comparison. Keep the examples on this prototype branch until the selected layout is rebuilt for production.

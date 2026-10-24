@@ -12,7 +12,7 @@ const files = new Map([
 createServer(async (req, res) => {
   const path = new URL(req.url, 'http://localhost').pathname;
   if (path === '/') {
-    res.writeHead(302, { Location: '/prototype/catalog?variant=A' }).end();
+    res.writeHead(302, { Location: '/prototype/catalog?variant=B' }).end();
     return;
   }
   if (path === '/favicon.ico') {
@@ -32,5 +32,5 @@ createServer(async (req, res) => {
     res.writeHead(500).end('Could not read prototype files.');
   }
 }).listen(port, '127.0.0.1', () => {
-  console.log(`Catalog prototype: http://localhost:${port}/prototype/catalog?variant=A`);
+  console.log(`Catalog prototype: http://localhost:${port}/prototype/catalog?variant=B`);
 });
