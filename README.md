@@ -4,6 +4,7 @@ The webshop runs as a Docker Compose stack. Each application and database has
 its own container:
 
 - `api-gateway` exposes the public API on port `8000`.
+- `catalog-frontend` serves the Next.js storefront on port `3000`.
 - `catalog-service` runs on port `8001` and uses `catalog-database`.
 - `inventory-service` runs on port `8003` and uses `inventory-database`.
 - `order-service` runs on port `8004` and uses `order-database`.
@@ -14,22 +15,34 @@ The gateway reaches the services over Compose's private network by service
 name. PostgreSQL data is stored in the `catalog-data`, `inventory-data`, and `order-data`
 volumes.
 
-## Catalog frontend prototypes
+## Catalog frontend
 
-Three local ordering designs are available in `frontend/catalog-prototype`:
-an illustrated storefront, a quick-order list, and a guided basket builder.
-Option B is the preferred direction, now themed as an electronics store
-with fictional phone, laptop, and mouse products.
-From this checkout, run:
+The selected Cobalt quick-order design is implemented in
+`frontend/catalog` using Next.js App Router, React, and TypeScript. It loads
+products and availability through the existing gateway and submits real
+orders, including pending, confirmed, and rejected reservation states.
+
+Start the complete stack below and open `http://localhost:3000`. For frontend
+development with the backend already running:
+
+If the Compose frontend is already using port 3000, first run
+`docker compose stop catalog-frontend` from this directory.
 
 ```powershell
-node frontend/catalog-prototype/server.mjs
+cd frontend/catalog
+npm ci
+npm run dev
 ```
 
-Open `http://localhost:5173/prototype/catalog?variant=B` and use the bottom
-switcher to compare the three designs. They share an in-memory basket and
-simulate checkout without sending real orders. See the
-[prototype notes](frontend/catalog-prototype/README.md) for details.
+Existing database volumes retain their original sample products. To add the
+electronics from the design as actual development records, run
+`npm run seed:electronics` from `frontend/catalog`. Existing products and
+stock are preserved. See the [frontend guide](frontend/catalog/README.md)
+for configuration, checks, and current limitations.
+
+The earlier layout and color experiments remain in `frontend/catalog-prototype`
+as design references. They use hardcoded data and simulated orders; they are not
+the Next.js application.
 
 ## Start the complete stack
 
@@ -45,8 +58,9 @@ Wait until every container is healthy:
 docker compose ps
 ```
 
-The frontend should use `http://localhost:8000` as its API base URL. The public
-routes include:
+The Next.js server uses `http://localhost:8000` locally and
+`http://api-gateway:8000` in Compose as its API base URL. Browser requests go
+through the frontend's same-origin `/api` routes. The gateway's public routes include:
 
 ```text
 GET http://localhost:8000/catalog/products

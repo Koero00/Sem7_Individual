@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" fill="none" aria-hidden="true"><defs>
+    <linearGradient id="phone-catalog-metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a5abb4"/><stop offset=".45" stop-color="#616b79"/><stop offset="1" stop-color="#303846"/></linearGradient>
+    <linearGradient id="phone-catalog-screen" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#182e43"/><stop offset=".5" stop-color="#5a8193"/><stop offset="1" stop-color="#b5caba"/></linearGradient>
+    <linearGradient id="phone-catalog-body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#68717e"/><stop offset=".55" stop-color="#3a4451"/><stop offset="1" stop-color="#222a36"/></linearGradient>
+  </defs><ellipse cx="150" cy="270" rx="64" ry="9" fill="#162435" opacity=".1"/>
+    <g transform="rotate(-10 150 150)"><rect x="87" y="27" width="126" height="238" rx="23" fill="url(#phone-catalog-metal)"/><rect x="91" y="30" width="118" height="232" rx="20" fill="#151e29"/>
+    <rect x="97" y="37" width="106" height="218" rx="16" fill="url(#phone-catalog-screen)"/><path d="M97 176c26-62 51-58 106-96v120c-40-20-72 0-106 40Z" fill="#b7d2bd" opacity=".55"/><path d="M97 220c25-46 61-44 106-101v62c-32 45-65 34-106 68Z" fill="#d9e2bf" opacity=".5"/>
+    <rect x="130" y="44" width="40" height="11" rx="6" fill="#18232e"/><rect x="136" y="244" width="28" height="3" rx="2" fill="#f4f7ef" opacity=".8"/><path d="M85 81v24m0 9v16m130-36v31" stroke="#53606e" stroke-width="3" stroke-linecap="round"/></g></svg>

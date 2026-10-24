@@ -5,7 +5,10 @@ C4Container
     title Webshop - container diagram
 
     Person(customer, "Customer")
+    Container(frontend, "Catalog Frontend", "Next.js, React, TypeScript", "Cobalt storefront, basket, and order status")
     Container(gateway, "API Gateway", "Python, FastAPI", "Public HTTP entry point")
+    Container(catalogApi, "Catalog API", "Python, FastAPI", "Reads and manages products")
+    ContainerDb(catalogDb, "Catalog Database", "PostgreSQL", "Products, descriptions, prices, and images")
     Container(orderApi, "Order API", "Python, FastAPI", "Creates and reads orders")
     Container(orderWorkers, "Order Workers", "Python, Pika", "Publishes commands and applies inventory results")
     ContainerDb(orderDb, "Order Database", "PostgreSQL", "Orders, inbox, and outbox")
@@ -14,7 +17,10 @@ C4Container
     Container(inventoryWorkers, "Inventory Workers", "Python, Pika", "Reserves stock and publishes outcomes")
     ContainerDb(inventoryDb, "Inventory Database", "PostgreSQL", "Stock, reservations, inbox, and outbox")
 
-    Rel(customer, gateway, "Places and checks orders", "HTTPS/JSON")
+    Rel(customer, frontend, "Browses products and places orders", "HTTPS")
+    Rel(frontend, gateway, "Reads products/stock; creates and checks orders", "HTTP/JSON")
+    Rel(gateway, catalogApi, "Forwards product requests", "HTTP/JSON")
+    Rel(catalogApi, catalogDb, "Reads and manages products", "SQL")
     Rel(gateway, orderApi, "Forwards order requests", "HTTP/JSON")
     Rel(gateway, inventoryApi, "Forwards inventory management requests", "HTTP/JSON")
     Rel(orderApi, orderDb, "Stores pending order and outbox command", "SQL")
