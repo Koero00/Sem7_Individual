@@ -2,7 +2,7 @@
 
 Question: should ordering start with visual browsing, a quick quantity list, or a guided basket?
 
-**Preferred direction: B, the quick-order list, themed as an electronics store.**
+**Selected design: B, the electronics quick-order list, with the Cobalt palette.**
 
 Option B has three color studies with the same layout and functionality:
 
@@ -12,7 +12,7 @@ Option B has three color studies with the same layout and functionality:
 | Warm amber | <http://localhost:5173/prototype/catalog?variant=B&palette=amber> |
 | Midnight violet | <http://localhost:5173/prototype/catalog?variant=B&palette=midnight> |
 
-In B, use the bottom swatches or arrow keys to compare colors. Basket contents, filters, quantities, and scroll position stay intact. The palette is stored in the URL and survives reloads. Checkout and the basket drawer follow the selected palette too. Cobalt is the default; palette selection is still open. The older layout examples remain accessible through their direct variant URLs below.
+In B, use the bottom swatches or arrow keys to revisit the color comparison. Basket contents, filters, quantities, and scroll position stay intact. The palette is stored in the URL and survives reloads. Checkout and the basket drawer follow the selected palette too. Cobalt is the selected palette and the default. The older layout examples remain accessible through their direct variant URLs below.
 
 Three structurally different layouts share the same in-memory basket. No real orders or payments are sent. The prototype now uses fictional electronics demo products rather than the backend's fruit seed data:
 
@@ -65,4 +65,4 @@ Rebuild the chosen layout as the real frontend and use the existing gateway at `
 
 The real frontend will need a same-origin API proxy or gateway CORS configuration, async order status handling, failed reservation feedback, and unavailable/loading states. None of those backend changes are part of this design comparison.
 
-Created on branch `codex/FE_Catalog`, based on `dev`. Design decision: **B selected as the direction; refine it as an electronics store before production implementation.** The other two examples use the same electronics demo data for consistent comparison. Keep the examples on this prototype branch until the selected layout is rebuilt for production.
+Created on branch `codex/FE_Catalog`, based on `dev`. Design decision: **B selected as an electronics store, with Cobalt as the chosen palette.** The layout keeps products, quantities, and the basket visible together; the palette was selected after comparing three color studies. The other examples remain available as design references. Keep the examples on this prototype branch until the selected layout is rebuilt for production.
