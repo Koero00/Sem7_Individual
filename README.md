@@ -89,6 +89,11 @@ The message flow and rationale are documented in the
 [C4 container view](docs/c4-container.md) and
 [ADR 001](docs/adr/001-rabbitmq-order-inventory.md).
 
+The [architecture decision index](docs/adr/README.md) also contains retrospective
+drafts explaining the service boundaries, database ownership, API gateway, and
+local development/CI environment. These records include the project author's
+explanations and identify remaining review questions and verification gaps.
+
 Proposed order listing, draft editing, cancellation, and soft deletion are
 specified in the [order management spec](docs/specs/order-management.md), with
 an [implementation backlog](docs/tickets/order-management.md). These features
