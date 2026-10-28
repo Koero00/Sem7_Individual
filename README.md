@@ -34,10 +34,10 @@ npm ci
 npm run dev
 ```
 
-Existing database volumes retain their original sample products. To add the
-electronics from the design as actual development records, run
-`npm run seed:electronics` from `frontend/catalog`. Existing products and
-stock are preserved. See the [frontend guide](frontend/catalog/README.md)
+New databases start with 15 fictional electronics and matching stock. To replace
+the original fruit samples and add the electronics in an existing development
+database, run `npm run seed:electronics` from `frontend/catalog`. Customized
+products and existing stock are preserved. See the [frontend guide](frontend/catalog/README.md)
 for configuration, checks, and current limitations.
 
 The earlier layout and color experiments remain in `frontend/catalog-prototype`
