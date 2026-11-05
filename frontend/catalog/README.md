@@ -34,13 +34,15 @@ The repository's `docker compose up --build -d` also builds and starts `catalog-
 - The backend has no category/specification fields. Display filters infer Phones, Laptops, and Mice from product names; all unclassified products remain visible under Other and All products. Descriptions are displayed directly from the API.
 - Product images use Catalog URLs with local device/generic fallbacks. Optional Google Fonts fall back to system fonts when unavailable.
 
-Existing database volumes still contain their original sample data. To **add** the fictional electronics used in the prototype as actual development records, run:
+New databases start with 15 fictional electronics: a 4K OLED monitor, keyboard, headphones, phone, laptop, mouse, SSD, processor, memory kit, graphics card, USB-C dock, webcam, speakers, controller, and tablet. Each has a EUR price (stored in cents), specifications, and matching inventory.
+
+To replace the original fruit samples and add the full electronics catalog to an existing development database, run:
 
 ```powershell
 npm run seed:electronics
 ```
 
-The seed uses namespaced IDs, adds missing catalog/inventory records, and never overwrites existing products or resets existing stock. Running it twice is safe. It uses `API_GATEWAY_URL` from the shell when set, otherwise `http://127.0.0.1:8000`; Node does not automatically load `.env.local` for this command.
+The seed replaces only the unchanged original Appel, Banaan, and Peer samples at IDs `1`, `2`, and `3`, retaining those IDs and their stock. It adds missing electronics and inventory records while preserving customized products and all existing stock. Running it twice is safe; no volume reset is needed. It uses `API_GATEWAY_URL` from the shell when set, otherwise `http://127.0.0.1:8000`; Node does not automatically load `.env.local` for this command.
 
 Orders are real database records in the connected environment, while no payment or delivery is implemented. Customer IDs are entered manually because the backend has no authentication or ownership checks yet. Do not expose customer orders publicly until those are implemented. Display totals are current catalog estimates; the Order API does not store a price snapshot or enforce a payment total.
 
