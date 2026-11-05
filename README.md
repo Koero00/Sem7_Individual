@@ -46,6 +46,11 @@ the Next.js application.
 
 ## Start the complete stack
 
+For the isolated Kubernetes experiment that scales Inventory reservation workers
+from RabbitMQ queue depth, see the [KEDA experiment guide](k8s/keda/README.md).
+The [real-order KEDA scenario](k8s/keda/orders/README.md) runs both APIs,
+transactional outbox publishers, and KEDA-scaled reservation/result consumers.
+
 From this directory, run:
 
 ```powershell

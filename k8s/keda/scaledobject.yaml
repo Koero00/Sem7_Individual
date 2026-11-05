@@ -1,0 +1,44 @@
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: inventory-rabbitmq
+spec:
+  secretTargetRef:
+    - parameter: host
+      name: experiment-credentials
+      key: rabbitmq-host
+    - parameter: username
+      name: experiment-credentials
+      key: rabbitmq-username
+    - parameter: password
+      name: experiment-credentials
+      key: rabbitmq-password
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: inventory-reservations
+spec:
+  scaleTargetRef:
+    name: inventory-reservation-consumer
+  pollingInterval: 5
+  cooldownPeriod: 60
+  minReplicaCount: 0
+  maxReplicaCount: 4
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 30
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: http
+        vhostName: /webshop
+        queueName: inventory.reserve.v1
+        mode: QueueLength
+        value: "20"
+        activationValue: "0"
+        excludeUnacknowledged: "false"
+      authenticationRef:
+        name: inventory-rabbitmq

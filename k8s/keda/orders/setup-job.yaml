@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: order-keda-setup
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 180
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      containers:
+        - name: setup
+          image: cloudproject-order:keda
+          imagePullPolicy: Never
+          command:
+            - python
+            - -c
+            - |
+              import os
+              import subprocess
+              from pathlib import Path
+              import psycopg
+              from messaging import declare_topology, open_connection
+              with psycopg.connect(os.environ['DATABASE_URL']) as connection:
+                  connection.execute(Path('/schema/init.sql').read_text())
+              subprocess.run(['alembic', 'upgrade', 'head'], check=True)
+              with open_connection() as rabbit:
+                  declare_topology(rabbit.channel())
+              print('Order schema migrated and result queues declared.', flush=True)
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: experiment-credentials
+                  key: ORDER_DATABASE_URL
+            - name: RABBITMQ_URL
+              valueFrom:
+                secretKeyRef:
+                  name: experiment-credentials
+                  key: RABBITMQ_URL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
+          volumeMounts:
+            - name: schema
+              mountPath: /schema
+              readOnly: true
+      volumes:
+        - name: schema
+          configMap:
+            name: order-bootstrap-schema
