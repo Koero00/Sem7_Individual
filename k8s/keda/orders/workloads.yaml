@@ -1,0 +1,184 @@
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: order-service
+    spec:
+      selector:
+        app: order-service
+      ports:
+        - port: 8004
+          targetPort: 8004
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: inventory-service
+    spec:
+      selector:
+        app: inventory-service
+      ports:
+        - port: 8003
+          targetPort: 8003
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: order-service
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: order-service
+      template:
+        metadata:
+          labels:
+            app: order-service
+        spec:
+          automountServiceAccountToken: false
+          containers:
+            - name: api
+              image: cloudproject-order:keda
+              imagePullPolicy: Never
+              ports:
+                - containerPort: 8004
+              env: &orderEnvironment
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: experiment-credentials
+                      key: ORDER_DATABASE_URL
+                - name: RABBITMQ_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: experiment-credentials
+                      key: RABBITMQ_URL
+              resources: &workerResources
+                requests:
+                  cpu: 100m
+                  memory: 64Mi
+                limits:
+                  cpu: 500m
+                  memory: 128Mi
+              readinessProbe:
+                httpGet:
+                  path: /health
+                  port: 8004
+                periodSeconds: 5
+              startupProbe:
+                httpGet:
+                  path: /health
+                  port: 8004
+                periodSeconds: 5
+                failureThreshold: 30
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: inventory-service
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: inventory-service
+      template:
+        metadata:
+          labels:
+            app: inventory-service
+        spec:
+          automountServiceAccountToken: false
+          containers:
+            - name: api
+              image: cloudproject-inventory:keda
+              imagePullPolicy: Never
+              ports:
+                - containerPort: 8003
+              env: &inventoryEnvironment
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: experiment-credentials
+                      key: DATABASE_URL
+                - name: RABBITMQ_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: experiment-credentials
+                      key: RABBITMQ_URL
+              resources: *workerResources
+              readinessProbe:
+                httpGet:
+                  path: /health
+                  port: 8003
+                periodSeconds: 5
+              startupProbe:
+                httpGet:
+                  path: /health
+                  port: 8003
+                periodSeconds: 5
+                failureThreshold: 30
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: order-outbox-publisher
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: order-outbox-publisher
+      template:
+        metadata:
+          labels:
+            app: order-outbox-publisher
+        spec:
+          automountServiceAccountToken: false
+          containers:
+            - name: publisher
+              image: cloudproject-order:keda
+              imagePullPolicy: Never
+              command: [python, outbox_publisher.py]
+              env: *orderEnvironment
+              resources: *workerResources
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: inventory-outbox-publisher
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: inventory-outbox-publisher
+      template:
+        metadata:
+          labels:
+            app: inventory-outbox-publisher
+        spec:
+          automountServiceAccountToken: false
+          containers:
+            - name: publisher
+              image: cloudproject-inventory:keda
+              imagePullPolicy: Never
+              command: [python, outbox_publisher.py]
+              env: *inventoryEnvironment
+              resources: *workerResources
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: order-result-consumer
+    spec:
+      replicas: 0
+      selector:
+        matchLabels:
+          app: order-result-consumer
+      template:
+        metadata:
+          labels:
+            app: order-result-consumer
+        spec:
+          automountServiceAccountToken: false
+          terminationGracePeriodSeconds: 30
+          containers:
+            - name: consumer
+              image: cloudproject-order:keda
+              imagePullPolicy: Never
+              command: [python, result_consumer.py]
+              env: *orderEnvironment
+              resources: *workerResources

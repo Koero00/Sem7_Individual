@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: webshop-keda-load
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      containers:
+        - name: client
+          image: cloudproject-order:keda
+          imagePullPolicy: Never
+          command: [python, /experiment/keda_orders.py]
+          env:
+            - name: ORDER_API_URL
+              value: http://order-service:8004
+            - name: INVENTORY_API_URL
+              value: http://inventory-service:8003
+            - name: ORDER_COUNT
+              value: "1000"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
+          volumeMounts:
+            - name: experiment
+              mountPath: /experiment
+              readOnly: true
+      volumes:
+        - name: experiment
+          configMap:
+            name: keda-orders-script
