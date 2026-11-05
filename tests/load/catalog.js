@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 const baseUrl = __ENV.BASE_URL || 'http://catalog:8000';
-const catalogPath = __ENV.CATALOG_PATH || '/';
+const catalogPath = __ENV.CATALOG_PATH || '/products';
 
 export const options = {
   stages: [

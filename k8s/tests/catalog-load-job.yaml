@@ -16,7 +16,7 @@ spec:
             - name: BASE_URL
               value: "http://catalog:8000"
             - name: CATALOG_PATH
-              value: "/"
+              value: "/products"
           resources:
             requests:
               cpu: "100m"
