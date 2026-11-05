@@ -1,5 +1,9 @@
 # CloudProject
 
+Codex PR review rules are defined in [AGENTS.md](AGENTS.md). See the
+[setup and verification guide](docs/codex-pr-reviews.md) to connect this repository,
+request a review, or enable automatic reviews through your Codex account.
+
 The webshop runs as a Docker Compose stack. Each application and database has
 its own container:
 
