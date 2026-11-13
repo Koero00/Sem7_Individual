@@ -57,8 +57,7 @@ def order_item(product_id: str, quantity: int):
     return {"product_id": product_id, "quantity": quantity}
 
 
-def seed_stock(quantity: int):
-    product_id = f"ci-{uuid4()}"
+def seed_stock(product_id: str, quantity: int):
     status, _, stock = request("POST", "/inventory", order_item(product_id, quantity))
     assert status == 201, stock
     return product_id
@@ -71,9 +70,10 @@ def stock_quantity(product_id: str):
 
 
 def main():
-    stocked = seed_stock(10)
-    limited = seed_stock(1)
-    competing = seed_stock(20)
+    run_id = uuid4()
+    stocked = seed_stock(f"ci-{run_id}-a", 10)
+    limited = seed_stock(f"ci-{run_id}-b", 1)
+    competing = seed_stock(f"ci-{run_id}-c", 20)
 
     confirmed = wait_for_terminal(create_order([order_item(stocked, 2)]))
     assert confirmed["status"] == "confirmed", confirmed

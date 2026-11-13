@@ -51,6 +51,13 @@ rollout order in mind. Add migrations for persisted databases; initialization SQ
 alone does not upgrade existing data. Verify relevant existing records remain
 valid, and producers and consumers remain compatible during the intended rollout.
 
+## Before merging
+
+Check that GitHub Actions shows a successful CI run for the current pull
+request head commit. The [PR checklist](../.github/pull_request_template.md)
+records this review. While the template is only on the development branch,
+copy the checklist item into the PR manually.
+
 ## Integration verification
 
 For service integration or container changes, validate the Compose configuration
