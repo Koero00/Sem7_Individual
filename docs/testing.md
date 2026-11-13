@@ -51,6 +51,13 @@ rollout order in mind. Add migrations for persisted databases; initialization SQ
 alone does not upgrade existing data. Verify relevant existing records remain
 valid, and producers and consumers remain compatible during the intended rollout.
 
+## Before merging
+
+Check that GitHub Actions shows a successful CI run for the current pull
+request head commit. The [PR checklist](../.github/pull_request_template.md)
+records this review. While the template is only on the development branch,
+copy the checklist item into the PR manually.
+
 ## Integration verification
 
 For service integration or container changes, validate the Compose configuration
@@ -60,19 +67,32 @@ from the repository root:
 docker compose config --quiet
 ```
 
-Exercise the affected flow against a healthy isolated local stack using
-[the root README](../README.md) for startup instructions. The existing smoke test
-is run from the root:
+Exercise the affected flow against a healthy isolated stack using
+[the root README](../README.md) for startup instructions. Use disposable test
+data because the checks write orders, inventory, and messages.
+
+From the repository root:
 
 ```powershell
 python scripts/e2e.py
+Get-Content -Raw scripts/verify-reservation-redelivery.py |
+  docker compose exec -T order-outbox-publisher python -
 ```
 
-[The script](../scripts/e2e.py) creates orders and consumes seeded stock, including
-competing orders for product `3`. It assumes the expected seed data; repeated
-runs against a used database can fail for reasons unrelated to the change.
-Preserve existing data and use a separate test environment. Volume deletion
-requires explicit authorization under the root instructions.
+The API smoke test creates unique stock entries to verify confirmation, rejection
+without partial reservations, and competing orders. The redelivery test republishes
+an actual order command to RabbitMQ and checks the confirmed order and stock.
+
+To exercise browser checkout against the same stack:
+
+```powershell
+npm --prefix frontend/catalog ci
+npm --prefix frontend/catalog exec -- playwright install chromium
+npm --prefix frontend/catalog run test:e2e
+```
+
+The browser test reserves one seeded Nova Phone. Set `E2E_GATEWAY_URL` or
+`E2E_FRONTEND_URL` when the isolated stack is exposed on different host ports.
 
 Add focused checks for behavior the smoke test does not cover. Report the
 commands actually run, outcomes, pre-existing failures, and unavailable checks;

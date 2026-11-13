@@ -1,9 +1,11 @@
 import json
+import os
 import time
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+from uuid import uuid4
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = os.getenv("E2E_GATEWAY_URL", "http://localhost:8000")
 
 
 def request(method: str, path: str, payload=None):
@@ -25,30 +27,19 @@ def request(method: str, path: str, payload=None):
         raise RuntimeError(f"{method} {path} failed with {exc.code}") from exc
 
 
-def create_order(quantity: int, product_id: str = "1"):
+def create_order(items):
     status, headers, order = request(
         "POST",
         "/orders",
         {
             "customer_id": "ci-customer",
-            "items": [{"product_id": product_id, "quantity": quantity}],
+            "items": items,
         },
     )
     assert status == 202, order
     assert order["status"] == "pending", order
     assert headers["location"] == f"/orders/{order['id']}"
     return order["id"]
-
-
-def wait_for_status(order_id: str, expected: str, timeout: float = 60):
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        status, _, order = request("GET", f"/orders/{order_id}")
-        assert status == 200, order
-        if order["status"] == expected:
-            return order
-        time.sleep(0.5)
-    raise TimeoutError(f"Order {order_id} did not become {expected}")
 
 
 def wait_for_terminal(order_id: str, timeout: float = 60):
@@ -62,23 +53,49 @@ def wait_for_terminal(order_id: str, timeout: float = 60):
     raise TimeoutError(f"Order {order_id} did not reach a terminal state")
 
 
-confirmed = wait_for_status(create_order(2), "confirmed")
-rejected = wait_for_status(create_order(100_000), "rejected")
-assert rejected["rejection_reason"] == "insufficient_stock", rejected
+def order_item(product_id: str, quantity: int):
+    return {"product_id": product_id, "quantity": quantity}
 
-# Two orders compete for the final 20 units of product 3. Exactly one may win.
-competing_order_ids = [create_order(15, "3"), create_order(15, "3")]
-competing_orders = [wait_for_terminal(order_id) for order_id in competing_order_ids]
-assert sorted(order["status"] for order in competing_orders) == [
-    "confirmed",
-    "rejected",
-]
-print(
-    json.dumps(
-        {
-            "confirmed_order": confirmed["id"],
-            "rejected_order": rejected["id"],
-            "competing_orders": [order["id"] for order in competing_orders],
-        }
+
+def seed_stock(product_id: str, quantity: int):
+    status, _, stock = request("POST", "/inventory", order_item(product_id, quantity))
+    assert status == 201, stock
+    return product_id
+
+
+def stock_quantity(product_id: str):
+    status, _, stock = request("GET", f"/inventory/{product_id}")
+    assert status == 200, stock
+    return stock["quantity"]
+
+
+def main():
+    run_id = uuid4()
+    stocked = seed_stock(f"ci-{run_id}-a", 10)
+    limited = seed_stock(f"ci-{run_id}-b", 1)
+    competing = seed_stock(f"ci-{run_id}-c", 20)
+
+    confirmed = wait_for_terminal(create_order([order_item(stocked, 2)]))
+    assert confirmed["status"] == "confirmed", confirmed
+    assert stock_quantity(stocked) == 8
+
+    rejected = wait_for_terminal(
+        create_order([order_item(stocked, 3), order_item(limited, 2)])
     )
-)
+    assert rejected["status"] == "rejected", rejected
+    assert rejected["rejection_reason"] == "insufficient_stock", rejected
+    assert stock_quantity(stocked) == 8
+    assert stock_quantity(limited) == 1
+
+    competing_ids = [create_order([order_item(competing, 15)]) for _ in range(2)]
+    competing_orders = [wait_for_terminal(order_id) for order_id in competing_ids]
+    assert sorted(order["status"] for order in competing_orders) == [
+        "confirmed",
+        "rejected",
+    ]
+    assert stock_quantity(competing) == 5
+    print("Order confirmation, all-or-nothing reservation and stock competition passed")
+
+
+if __name__ == "__main__":
+    main()

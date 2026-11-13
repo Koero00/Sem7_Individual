@@ -32,7 +32,7 @@ services:
       - catalog-data:/var/lib/postgresql/data
       - ./services/catalog/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U catalog -d catalog"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U catalog -d catalog"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -73,7 +73,7 @@ services:
       - inventory-data:/var/lib/postgresql/data
       - ./services/inventory/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U inventory -d inventory"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U inventory -d inventory"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -157,7 +157,7 @@ services:
       - order-data:/var/lib/postgresql/data
       - ./services/order/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U orders -d orders"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U orders -d orders"]
       interval: 5s
       timeout: 5s
       retries: 5

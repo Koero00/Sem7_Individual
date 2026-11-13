@@ -10,9 +10,13 @@ on:
       - main
       - dev
 
+permissions:
+  contents: read
+
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -22,57 +26,94 @@ jobs:
           - services/inventory
           - services/order
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.1.0
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
+          version: "0.10.11"
           python-version: "3.13"
 
       - name: Install dependencies
         working-directory: ${{ matrix.path }}
         run: uv sync --locked --dev
 
+      - name: Audit Python dependencies
+        working-directory: ${{ matrix.path }}
+        run: |
+          requirements="$(mktemp)"
+          trap 'rm -f "$requirements"' EXIT
+          uv export --locked --no-emit-project --output-file "$requirements"
+          uvx --from pip-audit==2.10.1 pip-audit --requirement "$requirements" --require-hashes --disable-pip
+
       - name: Ruff check
         working-directory: ${{ matrix.path }}
-        run: uv run ruff check .
+        run: uv run --locked ruff check .
 
       - name: Ruff format
         working-directory: ${{ matrix.path }}
-        run: uv run ruff format --check .
+        run: uv run --locked ruff format --check .
 
       - name: Run tests
         working-directory: ${{ matrix.path }}
-        run: uv run pytest
+        run: uv run --locked pytest
 
   frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend/catalog
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/catalog/package-lock.json
       - run: npm ci
+      - name: Audit npm dependencies
+        run: npm audit --audit-level=high
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
 
   end-to-end:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [quality, frontend]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/catalog/package-lock.json
+
+      - name: Install checkout test dependencies
+        working-directory: frontend/catalog
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
 
       - name: Start complete stack
-        run: docker compose up --build --detach --wait
+        run: docker compose up --build --detach --wait --wait-timeout 120
 
-      - name: Verify asynchronous order flow
+      - name: Verify asynchronous order flow and atomic reservations
         run: python scripts/e2e.py
+
+      - name: Verify RabbitMQ redelivery
+        run: docker compose exec -T order-outbox-publisher python - < scripts/verify-reservation-redelivery.py
+
+      - name: Verify checkout in Chromium
+        working-directory: frontend/catalog
+        run: npm run test:e2e
 
       - name: Show service logs
         if: failure()
