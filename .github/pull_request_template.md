@@ -24,6 +24,8 @@ Use docs/testing.md and docs/infrastructure.md for detailed checks where relevan
   actual results and any verification gaps are recorded above.
 - [ ] **Deployment:** Migrations, HTTP/message contract compatibility,
   configuration, and security are addressed where affected.
+- [ ] **CI before merge:** The reviewer or merger checked that the CI workflow
+  succeeded for the current pull request head commit.
 
 ## Risks and deployment
 

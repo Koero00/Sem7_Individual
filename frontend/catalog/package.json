@@ -8,7 +8,8 @@
     "start": "next start --hostname 0.0.0.0 --port 3000",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
-    "seed:electronics": "node ../../scripts/seed-electronics.mjs"
+    "seed:electronics": "node ../../scripts/seed-electronics.mjs",
+    "test:e2e": "playwright test tests/e2e --workers=1"
   },
   "dependencies": {
     "next": "16.4.3",
@@ -16,11 +17,14 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tsx": "^4",
     "typescript": "^5"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  }
 }
